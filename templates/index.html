@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Excel Data Merger</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📊 Excel Data Merger</h1>
+
+    <p class="subtitle">
+        Upload multiple Excel files and merge them
+        using one common matching column.
+    </p>
+
+
+    <!-- ================================================= -->
+    <!-- UPLOAD -->
+    <!-- ================================================= -->
+
+    <section class="card">
+
+        <h2>1. Upload Excel Files</h2>
+
+        <input
+            type="file"
+            id="fileInput"
+            multiple
+            accept=".xlsx,.xls"
+        >
+
+        <p id="fileCount">
+            No files selected.
+        </p>
+
+        <button
+            id="analyzeButton"
+            onclick="analyzeFiles()"
+        >
+            Analyze Files
+        </button>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- FILE INFORMATION -->
+    <!-- ================================================= -->
+
+    <section
+        class="card"
+        id="fileSection"
+        style="display:none;"
+    >
+
+        <h2>2. Uploaded Files</h2>
+
+        <div id="fileInformation"></div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- MATCHING COLUMN -->
+    <!-- ================================================= -->
+
+    <section
+        class="card"
+        id="matchingSection"
+        style="display:none;"
+    >
+
+        <h2>3. Select Matching Column</h2>
+
+        <p>
+            Choose ONE column that identifies the
+            same person across all files.
+        </p>
+
+        <div id="matchingColumns"></div>
+
+        <button
+            id="mergeButton"
+            onclick="mergeFiles()"
+            disabled
+        >
+            Merge Files
+        </button>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- VALIDATION -->
+    <!-- ================================================= -->
+
+    <section
+        class="card"
+        id="validationSection"
+        style="display:none;"
+    >
+
+        <h2>4. Validation Results</h2>
+
+        <div class="validation-grid">
+
+
+            <!-- MATCHED -->
+
+            <div class="validation-card matched-card">
+
+                <div class="validation-title">
+                    🟢 Matched Rows
+                </div>
+
+                <div
+                    class="validation-count"
+                    id="matchedCount"
+                >
+                    0
+                </div>
+
+                <button
+                    class="validation-download"
+                    onclick="downloadValidation('matched')"
+                >
+                    Download Matched
+                </button>
+
+            </div>
+
+
+            <!-- UNMATCHED -->
+
+            <div class="validation-card unmatched-card">
+
+                <div class="validation-title">
+                    🔴 Unmatched
+                </div>
+
+                <div
+                    class="validation-count"
+                    id="unmatchedCount"
+                >
+                    0
+                </div>
+
+                <button
+                    class="validation-download"
+                    onclick="downloadValidation('unmatched')"
+                >
+                    Download Unmatched
+                </button>
+
+            </div>
+
+
+            <!-- DUPLICATE -->
+
+            <div class="validation-card duplicate-card">
+
+                <div class="validation-title">
+                    🔵 Duplicate
+                </div>
+
+                <div
+                    class="validation-count"
+                    id="duplicateCount"
+                >
+                    0
+                </div>
+
+                <button
+                    class="validation-download"
+                    onclick="downloadValidation('duplicate')"
+                >
+                    Download Duplicate
+                </button>
+
+            </div>
+
+
+            <!-- BLANK -->
+
+            <div class="validation-card blank-card">
+
+                <div class="validation-title">
+                    🟡 Blank
+                </div>
+
+                <div
+                    class="validation-count"
+                    id="blankCount"
+                >
+                    0
+                </div>
+
+                <button
+                    class="validation-download"
+                    onclick="downloadValidation('blank')"
+                >
+                    Download Blank
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- UNMATCHED TABLE -->
+
+        <div class="result-section">
+
+            <h3>🔴 Unmatched Records</h3>
+
+            <div
+                id="unmatchedTable"
+                class="table-container"
+            >
+            </div>
+
+        </div>
+
+
+        <!-- DUPLICATE TABLE -->
+
+        <div class="result-section">
+
+            <h3>🔵 Duplicate Records</h3>
+
+            <div
+                id="duplicateTable"
+                class="table-container"
+            >
+            </div>
+
+        </div>
+
+
+        <!-- BLANK TABLE -->
+
+        <div class="result-section">
+
+            <h3>🟡 Blank Matching Values</h3>
+
+            <div
+                id="blankTable"
+                class="table-container"
+            >
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- MERGED PREVIEW -->
+    <!-- ================================================= -->
+
+    <section
+        class="card"
+        id="previewSection"
+        style="display:none;"
+    >
+
+        <h2>5. Merged Data Preview</h2>
+
+        <p id="previewInfo"></p>
+
+        <div
+            id="mergedTable"
+            class="table-container"
+        >
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- DOWNLOAD -->
+    <!-- ================================================= -->
+
+    <section
+        class="card"
+        id="downloadSection"
+        style="display:none;"
+    >
+
+        <h2>6. Download Complete Merged Excel</h2>
+
+        <p>
+            This file contains the merged records
+            from all uploaded Excel files.
+        </p>
+
+        <button
+            onclick="downloadMergedFile()"
+        >
+            Download Merged Excel
+        </button>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- MESSAGE -->
+    <!-- ================================================= -->
+
+    <div
+        id="message"
+        class="message"
+    >
+    </div>
+
+</div>
+
+
+<script>
+
+let selectedMatchingColumn = "";
+let lastMergeCompleted = false;
+
+
+/* =======================================================
+   FILE INPUT
+   ======================================================= */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", function () {
+
+        const files = this.files;
+
+        const countElement =
+            document.getElementById("fileCount");
+
+        if (files.length === 0) {
+
+            countElement.textContent =
+                "No files selected.";
+
+            return;
+        }
+
+        countElement.textContent =
+            `${files.length} file(s) selected.`;
+    });
+
+
+/* =======================================================
+   MESSAGE
+   ======================================================= */
+
+function showMessage(
+    message,
+    type = "error"
+) {
+
+    const element =
+        document.getElementById("message");
+
+    element.textContent = message;
+
+    element.className =
+        `message ${type}`;
+
+    element.style.display = "block";
+}
+
+
+function clearMessage() {
+
+    const element =
+        document.getElementById("message");
+
+    element.textContent = "";
+
+    element.style.display = "none";
+}
+
+
+/* =======================================================
+   BUILD FILE FORM DATA
+   ======================================================= */
+
+function createFileFormData() {
+
+    const input =
+        document.getElementById("fileInput");
+
+    const files = input.files;
+
+    const formData = new FormData();
+
+    for (let i = 0; i < files.length; i++) {
+
+        formData.append(
+            "files",
+            files[i]
+        );
+    }
+
+    return formData;
+}
+
+
+/* =======================================================
+   ANALYZE FILES
+   ======================================================= */
+
+async function analyzeFiles() {
+
+    clearMessage();
+
+    const input =
+        document.getElementById("fileInput");
+
+    const files = input.files;
+
+
+    if (files.length < 2) {
+
+        showMessage(
+            "Please select at least 2 Excel files."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById("analyzeButton");
+
+    button.disabled = true;
+
+    button.textContent =
+        "Analyzing...";
+
+
+    try {
+
+        const formData =
+            createFileFormData();
+
+
+        const response =
+            await fetch(
+                "/analyze",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to analyze files."
+            );
+        }
+
+
+        displayFileInformation(
+            data.files
+        );
+
+
+        displayMatchingColumns(
+            data.common_columns
+        );
+
+
+        document
+            .getElementById("fileSection")
+            .style.display = "block";
+
+
+        document
+            .getElementById("matchingSection")
+            .style.display = "block";
+
+
+        showMessage(
+            "Files analyzed successfully.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message ||
+            "Something went wrong while analyzing."
+        );
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Analyze Files";
+    }
+}
+
+
+/* =======================================================
+   DISPLAY FILE INFORMATION
+   ======================================================= */
+
+function displayFileInformation(
+    files
+) {
+
+    const container =
+        document.getElementById(
+            "fileInformation"
+        );
+
+    container.innerHTML = "";
+
+
+    files.forEach(function(file) {
+
+        const box =
+            document.createElement("div");
+
+        box.className =
+            "file-box";
+
+
+        const title =
+            document.createElement("h3");
+
+        title.textContent =
+            "📄 " + file.filename;
+
+
+        const rows =
+            document.createElement("p");
+
+        rows.textContent =
+            `Rows: ${file.rows}`;
+
+
+        const columns =
+            document.createElement("p");
+
+        columns.textContent =
+            `Columns: ${file.columns.length}`;
+
+
+        const columnList =
+            document.createElement("div");
+
+        columnList.className =
+            "column-list";
+
+
+        file.columns.forEach(
+            function(column) {
+
+                const span =
+                    document.createElement("span");
+
+                span.textContent =
+                    column;
+
+                columnList.appendChild(
+                    span
+                );
+            }
+        );
+
+
+        box.appendChild(title);
+
+        box.appendChild(rows);
+
+        box.appendChild(columns);
+
+        box.appendChild(columnList);
+
+        container.appendChild(box);
+
+    });
+}
+
+
+/* =======================================================
+   DISPLAY MATCHING COLUMNS
+   ======================================================= */
+
+function displayMatchingColumns(
+    columns
+) {
+
+    const container =
+        document.getElementById(
+            "matchingColumns"
+        );
+
+    container.innerHTML = "";
+
+    selectedMatchingColumn = "";
+
+
+    const mergeButton =
+        document.getElementById(
+            "mergeButton"
+        );
+
+    mergeButton.disabled = true;
+
+
+    if (!columns || columns.length === 0) {
+
+        container.innerHTML =
+            `
+            <div class="warning">
+                ❌ No common column was found
+                across all uploaded files.
+            </div>
+            `;
+
+        return;
+    }
+
+
+    if (columns.length === 1) {
+
+        const column =
+            columns[0];
+
+        selectedMatchingColumn =
+            column;
+
+
+        container.innerHTML =
+            `
+            <div class="auto-selected">
+                <strong>Automatically selected:</strong>
+                ${escapeHtml(column)}
+            </div>
+            `;
+
+
+        mergeButton.disabled = false;
+
+        return;
+    }
+
+
+    const heading =
+        document.createElement("p");
+
+    heading.innerHTML =
+        "<strong>Common columns found:</strong>";
+
+    container.appendChild(
+        heading
+    );
+
+
+    columns.forEach(
+        function(column, index) {
+
+            const label =
+                document.createElement("label");
+
+            label.className =
+                "radio-option";
+
+
+            const radio =
+                document.createElement(
+                    "input"
+                );
+
+            radio.type =
+                "radio";
+
+            radio.name =
+                "matchingColumn";
+
+            radio.value =
+                column;
+
+
+            radio.addEventListener(
+                "change",
+                function() {
+
+                    selectedMatchingColumn =
+                        this.value;
+
+                    mergeButton.disabled =
+                        false;
+                }
+            );
+
+
+            label.appendChild(
+                radio
+            );
+
+
+            const text =
+                document.createTextNode(
+                    " " + column
+                );
+
+            label.appendChild(
+                text
+            );
+
+
+            container.appendChild(
+                label
+            );
+        }
+    );
+}
+
+
+/* =======================================================
+   MERGE FILES
+   ======================================================= */
+
+async function mergeFiles() {
+
+    clearMessage();
+
+
+    if (!selectedMatchingColumn) {
+
+        showMessage(
+            "Please select a matching column."
+        );
+
+        return;
+    }
+
+
+    const input =
+        document.getElementById("fileInput");
+
+
+    if (input.files.length < 2) {
+
+        showMessage(
+            "Please upload at least 2 files."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            "mergeButton"
+        );
+
+    button.disabled = true;
+
+    button.textContent =
+        "Merging...";
+
+
+    try {
+
+        const formData =
+            createFileFormData();
+
+
+        formData.append(
+            "matching_column",
+            selectedMatchingColumn
+        );
+
+
+        const response =
+            await fetch(
+                "/merge",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Something went wrong while merging."
+            );
+        }
+
+
+        lastMergeCompleted = true;
+
+
+        /* -----------------------------------------------
+           VALIDATION COUNTS
+        ------------------------------------------------ */
+
+        document.getElementById(
+            "matchedCount"
+        ).textContent =
+            data.validation.matched;
+
+
+        document.getElementById(
+            "unmatchedCount"
+        ).textContent =
+            data.validation.unmatched;
+
+
+        document.getElementById(
+            "duplicateCount"
+        ).textContent =
+            data.validation.duplicate;
+
+
+        document.getElementById(
+            "blankCount"
+        ).textContent =
+            data.validation.blank;
+
+
+        document.getElementById(
+            "validationSection"
+        ).style.display = "block";
+
+
+        /* -----------------------------------------------
+           DEFECT TABLES
+        ------------------------------------------------ */
+
+        displayDefectTable(
+            "unmatchedTable",
+            data.unmatched_records,
+            "No unmatched records found."
+        );
+
+
+        displayDefectTable(
+            "duplicateTable",
+            data.duplicate_records,
+            "No duplicate records found."
+        );
+
+
+        displayDefectTable(
+            "blankTable",
+            data.blank_records,
+            "No blank matching values found."
+        );
+
+
+        /* -----------------------------------------------
+           MERGED PREVIEW
+        ------------------------------------------------ */
+
+        document.getElementById(
+            "previewInfo"
+        ).textContent =
+            `Total merged rows: ${data.rows}`;
+
+
+        displayDataTable(
+            "mergedTable",
+            data.columns,
+            data.preview
+        );
+
+
+        document.getElementById(
+            "previewSection"
+        ).style.display = "block";
+
+
+        document.getElementById(
+            "downloadSection"
+        ).style.display = "block";
+
+
+        showMessage(
+            `Merge completed successfully. ${data.rows} rows created.`,
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message ||
+            "Something went wrong while merging."
+        );
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Merge Files";
+    }
+}
+
+
+/* =======================================================
+   DISPLAY DEFECT TABLE
+   ======================================================= */
+
+function displayDefectTable(
+    elementId,
+    records,
+    emptyMessage
+) {
+
+    const container =
+        document.getElementById(
+            elementId
+        );
+
+    container.innerHTML = "";
+
+
+    if (
+        !records ||
+        records.length === 0
+    ) {
+
+        const message =
+            document.createElement("p");
+
+        message.className =
+            "empty-message";
+
+        message.textContent =
+            emptyMessage;
+
+        container.appendChild(
+            message
+        );
+
+        return;
+    }
+
+
+    const columns =
+        Object.keys(
+            records[0]
+        );
+
+
+    const table =
+        document.createElement("table");
+
+
+    const thead =
+        document.createElement("thead");
+
+
+    const headerRow =
+        document.createElement("tr");
+
+
+    columns.forEach(
+        function(column) {
+
+            const th =
+                document.createElement("th");
+
+            th.textContent =
+                column;
+
+            headerRow.appendChild(
+                th
+            );
+        }
+    );
+
+
+    thead.appendChild(
+        headerRow
+    );
+
+    table.appendChild(
+        thead
+    );
+
+
+    const tbody =
+        document.createElement("tbody");
+
+
+    records.forEach(
+        function(record) {
+
+            const row =
+                document.createElement("tr");
+
+
+            columns.forEach(
+                function(column) {
+
+                    const td =
+                        document.createElement("td");
+
+                    td.textContent =
+                        record[column] ?? "";
+
+                    row.appendChild(
+                        td
+                    );
+                }
+            );
+
+
+            tbody.appendChild(
+                row
+            );
+        }
+    );
+
+
+    table.appendChild(
+        tbody
+    );
+
+
+    container.appendChild(
+        table
+    );
+}
+
+
+/* =======================================================
+   DISPLAY MERGED TABLE
+   ======================================================= */
+
+function displayDataTable(
+    elementId,
+    columns,
+    rows
+) {
+
+    const container =
+        document.getElementById(
+            elementId
+        );
+
+    container.innerHTML = "";
+
+
+    if (
+        !rows ||
+        rows.length === 0
+    ) {
+
+        container.innerHTML =
+            "<p>No merged data available.</p>";
+
+        return;
+    }
+
+
+    const table =
+        document.createElement("table");
+
+
+    const thead =
+        document.createElement("thead");
+
+
+    const headerRow =
+        document.createElement("tr");
+
+
+    columns.forEach(
+        function(column) {
+
+            const th =
+                document.createElement("th");
+
+            th.textContent =
+                column;
+
+            headerRow.appendChild(
+                th
+            );
+        }
+    );
+
+
+    thead.appendChild(
+        headerRow
+    );
+
+    table.appendChild(
+        thead
+    );
+
+
+    const tbody =
+        document.createElement("tbody");
+
+
+    rows.forEach(
+        function(record) {
+
+            const row =
+                document.createElement("tr");
+
+
+            columns.forEach(
+                function(column) {
+
+                    const td =
+                        document.createElement("td");
+
+                    td.textContent =
+                        record[column] ?? "";
+
+                    row.appendChild(
+                        td
+                    );
+                }
+            );
+
+
+            tbody.appendChild(
+                row
+            );
+        }
+    );
+
+
+    table.appendChild(
+        tbody
+    );
+
+
+    container.appendChild(
+        table
+    );
+}
+
+
+/* =======================================================
+   DOWNLOAD MERGED FILE
+   ======================================================= */
+
+async function downloadMergedFile() {
+
+    clearMessage();
+
+
+    if (!selectedMatchingColumn) {
+
+        showMessage(
+            "Please select a matching column first."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const formData =
+            createFileFormData();
+
+
+        formData.append(
+            "matching_column",
+            selectedMatchingColumn
+        );
+
+
+        const response =
+            await fetch(
+                "/download",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to download merged file."
+            );
+        }
+
+
+        await downloadBlob(
+            response,
+            "merged_output.xlsx"
+        );
+
+
+        showMessage(
+            "Merged Excel downloaded successfully.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message ||
+            "Download failed."
+        );
+    }
+}
+
+
+/* =======================================================
+   DOWNLOAD VALIDATION
+   ======================================================= */
+
+async function downloadValidation(
+    validationType
+) {
+
+    clearMessage();
+
+
+    if (!selectedMatchingColumn) {
+
+        showMessage(
+            "Please select a matching column first."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const formData =
+            createFileFormData();
+
+
+        formData.append(
+            "matching_column",
+            selectedMatchingColumn
+        );
+
+
+        formData.append(
+            "validation_type",
+            validationType
+        );
+
+
+        const response =
+            await fetch(
+                "/download-validation",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to download validation file."
+            );
+        }
+
+
+        await downloadBlob(
+            response,
+            `${validationType}_records.xlsx`
+        );
+
+
+        showMessage(
+            `${validationType} Excel downloaded successfully.`,
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            error.message ||
+            "Download failed."
+        );
+    }
+}
+
+
+/* =======================================================
+   DOWNLOAD BLOB
+   ======================================================= */
+
+async function downloadBlob(
+    response,
+    filename
+) {
+
+    const blob =
+        await response.blob();
+
+
+    const url =
+        window.URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+    link.download =
+        filename;
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    window.URL.revokeObjectURL(
+        url
+    );
+}
+
+
+/* =======================================================
+   HTML ESCAPE
+   ======================================================= */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+</script>
+
+</body>
+</html>
